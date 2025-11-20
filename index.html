@@ -158,11 +158,11 @@
             max-width: 900px;
             padding: 20px;
             margin-top: 50px;
-            position: relative;   /* <-- Add this */
-            z-index: 100;         /* <-- Add this */
-            background: white;    /* Optional: ensures content is always readable */
-            border-radius: 20px;  /* Optional: for a nice look */
-            box-shadow: 0 10px 30px rgba(0,0,0,0.08); /* Optional: subtle shadow */
+            position: relative;
+            z-index: 100;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
         }
         
         .tabs {
@@ -243,15 +243,52 @@
             color: #d81b60;
         }
         
+        /* MODIFIED: Scrollable Letter Content */
         .letter-content {
             max-height: 0;
             overflow: hidden;
             transition: max-height 0.5s ease;
+            /* Allow text selection inside letter */
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
         }
         
         .letter.expanded .letter-content {
-            max-height: 500px;
+            /* Changed from fixed px to vh for better responsiveness */
+            max-height: 60vh; 
+            overflow-y: auto; /* Enables scrolling for long letters */
+            padding-right: 10px; /* Prevents scrollbar from covering text */
         }
+        
+        /* Custom Scrollbar Styling for Letters and Wall */
+        .letter-content::-webkit-scrollbar,
+        .fw-messages::-webkit-scrollbar,
+        .fw-textarea::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .letter-content::-webkit-scrollbar-track,
+        .fw-messages::-webkit-scrollbar-track,
+        .fw-textarea::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .letter-content::-webkit-scrollbar-thumb,
+        .fw-messages::-webkit-scrollbar-thumb,
+        .fw-textarea::-webkit-scrollbar-thumb {
+            background: #ffb7c5;
+            border-radius: 4px;
+        }
+
+        .letter-content::-webkit-scrollbar-thumb:hover,
+        .fw-messages::-webkit-scrollbar-thumb:hover,
+        .fw-textarea::-webkit-scrollbar-thumb:hover {
+            background: #d81b60;
+        }
+
         
         /* Music Tab */
         .song {
@@ -314,12 +351,90 @@
             pointer-events: none;
         }
         
-        /* Re-enable clicking for expansion but prevent dragging/saving */
         .gallery-item img {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            pointer-events: none; /* Prevent right click on image specifically */
+            pointer-events: none;
+        }
+
+        /* --- Freedom Wall Styles --- */
+        .freedom-input-area {
+            background: #fff5f7;
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px dashed #ffb7c5;
+            margin-bottom: 25px;
+        }
+
+        .fw-input, .fw-textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ffb7c5;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.3s;
+            /* Enable typing */
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
+        }
+
+        .fw-input:focus, .fw-textarea:focus {
+            border-color: #d81b60;
+        }
+
+        .fw-textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .fw-messages {
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .fw-message-card {
+            background: #ffffff;
+            border-left: 4px solid #d81b60;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            animation: fadeIn 0.4s ease;
+        }
+
+        .fw-message-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 13px;
+            color: #888;
+        }
+
+        .fw-author {
+            font-weight: 600;
+            color: #d81b60;
+            font-size: 15px;
+        }
+
+        .fw-text {
+            color: #444;
+            white-space: pre-wrap;
+            line-height: 1.5;
+            font-size: 15px;
+        }
+
+        .empty-wall-message {
+            text-align: center;
+            color: #999;
+            font-style: italic;
+            padding: 20px;
         }
         
         /* Decorative Elements */
@@ -496,7 +611,7 @@
         }
         
         .artist.expanded .artist-songs {
-            max-height: 1000px; /* enough for several songs */
+            max-height: 1000px;
             margin-bottom: 15px;
         }
         
@@ -543,7 +658,7 @@
             height: 100%;
             opacity: 0;
             transition: opacity 1s;
-            background: #2a002a; /* dark pink base */
+            background: #2a002a;
             overflow: hidden;
         }
 
@@ -568,24 +683,6 @@
         @keyframes rotateSpot {
             0% { transform: rotate(0deg);}
             100% { transform: rotate(360deg);}
-        }
-
-        @keyframes musicBgMove {
-            0% {
-                background-position: 50% 50%;
-            }
-            25% {
-                background-position: 80% 20%;
-            }
-            50% {
-                background-position: 20% 80%;
-            }
-            75% {
-                background-position: 80% 80%;
-            }
-            100% {
-                background-position: 50% 50%;
-            }
         }
 
         #nowPlayingBox audio {
@@ -638,7 +735,7 @@
             stroke: #ffd1dc;
             stroke-width: 10;
             fill: none;
-            stroke-dasharray: 2820; /* Circumference for 900px radius */
+            stroke-dasharray: 2820; 
             stroke-dashoffset: 0;
             animation: border-rotate 4s linear infinite;
             transform-origin: 50% 50%;
@@ -691,7 +788,11 @@
             <button class="tab" data-tab="gallery">
                 <span>🌷</span> Gallery
             </button>
-            <!-- NEW LOGOUT BUTTON -->
+            <!-- NEW FREEDOM WALL TAB -->
+            <button class="tab" data-tab="freedom-wall">
+                <span>🕊️</span> Freedom Wall
+            </button>
+            <!-- LOGOUT BUTTON -->
             <button class="tab" id="logoutButton">
                 <span>🔒</span> Log Out
             </button>
@@ -730,6 +831,13 @@
                        <br>
                         <p>Sincerely yours,</p>
                         <p>B from 4A</p>
+                        <!-- Added extra content to demonstrate scrolling -->
+                        <br><br>
+                        <p style="opacity: 0.7; font-size: 0.9em;">
+                            (P.S. This section is now scrollable! If I write a very long letter in the future, 
+                            it won't make the page endless. You can just scroll down here to read everything comfortably. 
+                            Hope you like this small update! 😊)
+                        </p>
                     </div>
                 </div>
             </div>
@@ -958,17 +1066,17 @@
             <!-- Notes Tab -->
             <div class="tab-content" id="notes">
                 <h2>Daily reminders</h2>
-                <h4>Update: 11-20-2025 (9:53 PM)</h4>
+                <h4>Update: 11-21-2025 (7:50AM)</h4>
                 <br>
                 <br>
                 <div class="note">
-                    <p>Enjoy your day.</p>
+                    <p>Enjoy your day!</p>
                 </div>
                 <div class="note">
-                    <p>Eat your meal po, wag palipas.</p>
+                    <p>Eat your meal on time.</p>
                 </div>
                 <div class="note">
-                    <p>Thank you so much for opening this virtual diary.</p>
+                    <p>Thank you so much again for opening this virtual diary.</p>
                 </div>
                 <div class="note">
                     <p>Get enough rest ha.</p>
@@ -977,10 +1085,10 @@
                     <p>I'm always here for you.</p>
                 </div>
                 <div class="note">
-                    <p>Set your mind at peace always.</p>
+                    <p>Let's talk whenever you're free.</p>
                 </div>
                 <div class="note">
-                    <p>Open it whenever you're free, daily letters din lalagay ko here for you.</p>
+                    <p>Ingat ka palagi!</p>
                 </div>
             </div>
             
@@ -1008,6 +1116,23 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Freedom Wall Tab -->
+            <div class="tab-content" id="freedom-wall">
+                <h2>Freedom Wall 🕊️</h2>
+                <p style="margin-bottom: 15px; color: #666; font-size: 14px;">Leave a message for everyone to see.</p>
+                
+                <div class="freedom-input-area">
+                    <input type="text" id="fwName" placeholder="Your Name" class="fw-input" maxlength="30">
+                    <textarea id="fwMessage" placeholder="Write your message here..." class="fw-textarea"></textarea>
+                    <button id="fwPostBtn" class="submit-btn" style="width: 100%;">Post Message</button>
+                </div>
+                
+                <div id="fwMessagesContainer" class="fw-messages">
+                    <div class="empty-wall-message">Loading messages...</div>
+                </div>
+            </div>
+
         </div>
     </div>
     
@@ -1022,470 +1147,481 @@
     <div id="mainBgOverlay"></div>
     <div id="mainBgBorder">
         <svg viewBox="0 0 1000 1000">
-    <circle class="circle-border" cx="500" cy="500" r="450"/>
-</svg>
+            <circle class="circle-border" cx="500" cy="500" r="450"/>
+        </svg>
     </div>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+        // Global Firebase logic
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+        // Auth Logic
+        async function initAuth() {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                console.log("Firebase Auth Successful");
+                // After auth is successful, setup listeners
+                setupFreedomWall();
+            } catch (error) {
+                console.error("Auth Failed", error);
+                document.querySelector('.empty-wall-message').textContent = "Connection failed. Please refresh.";
+            }
+        }
+
+        // --- Freedom Wall Logic ---
+        function setupFreedomWall() {
+            const fwName = document.getElementById('fwName');
+            const fwMessage = document.getElementById('fwMessage');
+            const fwPostBtn = document.getElementById('fwPostBtn');
+            const messagesContainer = document.getElementById('fwMessagesContainer');
+            
+            // Reference to the public collection
+            const messagesCol = collection(db, 'artifacts', appId, 'public', 'data', 'messages');
+
+            // 1. Post Message
+            fwPostBtn.addEventListener('click', async () => {
+                const name = fwName.value.trim();
+                const text = fwMessage.value.trim();
+
+                if (!name || !text) {
+                    alert("Please fill in both name and message!");
+                    return;
+                }
+
+                // Simple loading state
+                fwPostBtn.textContent = "Posting...";
+                fwPostBtn.disabled = true;
+
+                try {
+                    await addDoc(messagesCol, {
+                        name: name,
+                        message: text,
+                        timestamp: serverTimestamp() // Server time
+                    });
+                    
+                    // Clear inputs
+                    fwMessage.value = '';
+                    fwPostBtn.textContent = "Post Message";
+                    fwPostBtn.disabled = false;
+                } catch (e) {
+                    console.error("Error posting: ", e);
+                    alert("Failed to post message. Please try again.");
+                    fwPostBtn.textContent = "Post Message";
+                    fwPostBtn.disabled = false;
+                }
+            });
+
+            // 2. Listen for Messages
+            onSnapshot(messagesCol, (snapshot) => {
+                const messages = [];
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    // We need a sortable timestamp. If serverTimestamp hasn't synced yet, use Date.now()
+                    const time = data.timestamp ? data.timestamp.toMillis() : Date.now();
+                    messages.push({
+                        id: doc.id,
+                        name: data.name || 'Anonymous',
+                        message: data.message || '',
+                        time: time
+                    });
+                });
+
+                // Sort descending (newest first) in JS because we can't use orderBy in strict mode rules easily
+                messages.sort((a, b) => b.time - a.time);
+
+                // Render
+                messagesContainer.innerHTML = '';
+                if (messages.length === 0) {
+                    messagesContainer.innerHTML = '<div class="empty-wall-message">No messages yet. Be the first!</div>';
+                    return;
+                }
+
+                messages.forEach(msg => {
+                    const dateObj = new Date(msg.time);
+                    const dateStr = dateObj.toLocaleDateString() + ' ' + dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+                    const card = document.createElement('div');
+                    card.className = 'fw-message-card';
+                    card.innerHTML = `
+                        <div class="fw-message-header">
+                            <span class="fw-author">${escapeHtml(msg.name)}</span>
+                            <span>${dateStr}</span>
+                        </div>
+                        <div class="fw-text">${escapeHtml(msg.message)}</div>
+                    `;
+                    messagesContainer.appendChild(card);
+                });
+            }, (error) => {
+                console.error("Snapshot error:", error);
+                messagesContainer.innerHTML = '<div class="empty-wall-message">Error loading messages.</div>';
+            });
+        }
+
+        // Helper to prevent XSS
+        function escapeHtml(text) {
+            if (!text) return text;
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // Initialize
+        initAuth();
+    </script>
+
+    <!-- Original UI Logic -->
     <script>
-document.addEventListener('DOMContentLoaded', function() {
-    
-    // --- SECURITY & PROTECTION FEATURES ---
-
-    // 1. Disable Right Click (Context Menu)
-    document.addEventListener('contextmenu', function(e) {
-        e.preventDefault();
-        // Optional: You can show a sweet message instead of the menu
-        // alert("This letter is just for you, my Angel ❤️"); 
-    });
-
-    // 2. Disable Keyboard Shortcuts (Ctrl+C, Ctrl+S, Ctrl+U, F12, PrintScreen)
-    document.addEventListener('keydown', function(e) {
-        // Disable F12
-        if(e.key === 'F12') {
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        // --- SECURITY & PROTECTION FEATURES ---
+        document.addEventListener('contextmenu', function(e) { e.preventDefault(); });
+        document.addEventListener('keydown', function(e) {
+            if(e.key === 'F12') { e.preventDefault(); return false; }
+            if(e.ctrlKey) {
+                if(['c', 's', 'u', 'p', 'a'].includes(e.key.toLowerCase())) { e.preventDefault(); return false; }
+                if(e.shiftKey && e.key.toLowerCase() === 'i') { e.preventDefault(); return false; }
+            }
+        });
+        document.addEventListener('dragstart', function(e) { e.preventDefault(); });
+        document.addEventListener('copy', function(e) {
             e.preventDefault();
-            return false;
-        }
-
-        // Disable Ctrl shortcuts
-        if(e.ctrlKey) {
-            // c = copy, s = save, u = view source, p = print, a = select all
-            if(['c', 's', 'u', 'p', 'a'].includes(e.key.toLowerCase())) {
-                e.preventDefault();
-                return false;
-            }
-            // Ctrl+Shift+I (Inspect)
-            if(e.shiftKey && e.key.toLowerCase() === 'i') {
-                e.preventDefault();
-                return false;
-            }
-        }
-    });
-
-    // 3. Disable Dragging of Images and Text
-    document.addEventListener('dragstart', function(e) {
-        e.preventDefault();
-    });
-
-    // 4. Clear Clipboard on Copy Attempt (Backup to CSS user-select: none)
-    document.addEventListener('copy', function(e) {
-        e.preventDefault();
-        e.clipboardData.setData('text/plain', 'This content is protected ❤️');
-    });
-    
-    // 5. Blur window on lose focus (Deters screenshot tools that require clicking away)
-    // Note: This is a bit aggressive, so I'll leave it commented out, but you can enable it if you want
-    
-    window.addEventListener('blur', function() {
-        document.body.style.filter = 'blur(20px)';
-    });
-    window.addEventListener('focus', function() {
-        document.body.style.filter = 'none';
-    });
-    
-
-    // --- END SECURITY FEATURES ---
-
-
-    // Get all modal/content elements
-    const passwordModal = document.getElementById('passwordModal');
-    const welcomeScreen = document.getElementById('welcomeScreen');
-    const mainContent = document.getElementById('mainContent');
-    const passwordInput = document.getElementById('passwordInput');
-    const submitPassword = document.getElementById('submitPassword');
-    const logoutButton = document.getElementById('logoutButton');
-    const logoutScreen = document.getElementById('logoutScreen');
-
-    // --- SESSION PERSISTENCE LOGIC ---
-    
-    // Check if user is already logged in from this session
-    const isLoggedIn = sessionStorage.getItem('isAngelLoggedIn');
-
-    if (isLoggedIn === 'true') {
-        // If logged in, skip password and welcome screens
-        passwordModal.style.display = 'none';
-        welcomeScreen.style.display = 'none';
-        mainContent.style.display = 'block';
-    } else {
-        // If not logged in, set up the password check logic
-        // (Password modal is shown by default CSS)
-        submitPassword.addEventListener('click', function() {
-            if (passwordInput.value.toLowerCase() === 'micacutie') {
-                // --- Set session storage item on successful login ---
-                sessionStorage.setItem('isAngelLoggedIn', 'true');
-                
-                // --- Rest of the original success logic ---
-                passwordModal.style.opacity = '0';
-                setTimeout(() => {
-                    passwordModal.style.display = 'none';
-                    welcomeScreen.style.display = 'flex';
-                    setTimeout(() => {
-                        welcomeScreen.style.opacity = '0';
-                        setTimeout(() => {
-                            welcomeScreen.style.display = 'none';
-                            mainContent.style.display = 'block';
-                        }, 800);
-                    }, 2500);
-                }, 500);
-            } else {
-                // Original error logic
-                passwordInput.value = '';
-                passwordInput.placeholder = 'Try again, cutie...';
-                passwordInput.style.borderColor = '#ff4d4d';
-                setTimeout(() => {
-                    passwordInput.style.borderColor = '#ffb7c5';
-                    passwordInput.placeholder = 'The special word...';
-                }, 1500);
-            }
+            e.clipboardData.setData('text/plain', 'This content is protected ❤️');
         });
         
-        passwordInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                submitPassword.click();
-            }
-        });
-    }
-    // --- END SESSION PERSISTENCE LOGIC ---
+        // Get all modal/content elements
+        const passwordModal = document.getElementById('passwordModal');
+        const welcomeScreen = document.getElementById('welcomeScreen');
+        const mainContent = document.getElementById('mainContent');
+        const passwordInput = document.getElementById('passwordInput');
+        const submitPassword = document.getElementById('submitPassword');
+        const logoutButton = document.getElementById('logoutButton');
+        const logoutScreen = document.getElementById('logoutScreen');
 
-    // --- LOGOUT LOGIC ---
-    if (logoutButton) {
-        logoutButton.addEventListener('click', function() {
-            // 1. Pause music
-            const nowPlayingAudio = document.getElementById('nowPlayingAudio');
-            if (nowPlayingAudio && !nowPlayingAudio.paused) {
-                nowPlayingAudio.pause();
-            }
+        // --- SESSION PERSISTENCE LOGIC ---
+        const isLoggedIn = sessionStorage.getItem('isAngelLoggedIn');
 
-            // 2. Clear session
-            sessionStorage.removeItem('isAngelLoggedIn');
+        if (isLoggedIn === 'true') {
+            passwordModal.style.display = 'none';
+            welcomeScreen.style.display = 'none';
+            mainContent.style.display = 'block';
+        } else {
+            submitPassword.addEventListener('click', function() {
+                if (passwordInput.value.toLowerCase() === 'micacutie') {
+                    sessionStorage.setItem('isAngelLoggedIn', 'true');
+                    passwordModal.style.opacity = '0';
+                    setTimeout(() => {
+                        passwordModal.style.display = 'none';
+                        welcomeScreen.style.display = 'flex';
+                        setTimeout(() => {
+                            welcomeScreen.style.opacity = '0';
+                            setTimeout(() => {
+                                welcomeScreen.style.display = 'none';
+                                mainContent.style.display = 'block';
+                            }, 800);
+                        }, 2500);
+                    }, 500);
+                } else {
+                    passwordInput.value = '';
+                    passwordInput.placeholder = 'Try again, cutie...';
+                    passwordInput.style.borderColor = '#ff4d4d';
+                    setTimeout(() => {
+                        passwordInput.style.borderColor = '#ffb7c5';
+                        passwordInput.placeholder = 'The special word...';
+                    }, 1500);
+                }
+            });
             
-            // 3. Hide main content
-            if (mainContent) {
-                mainContent.style.display = 'none';
-            }
+            passwordInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    submitPassword.click();
+                }
+            });
+        }
 
-            // 4. Show and fade in logout screen
-            if (logoutScreen) {
-                logoutScreen.style.display = 'flex';
-                setTimeout(() => {
-                    logoutScreen.style.opacity = '1';
-                }, 10); // small delay to ensure display:flex applies before transition
-            }
-
-            // 5. Wait, then reload the page
-            setTimeout(() => {
-                // Fading out isn't strictly necessary if we reload, but it's smoother.
-                if(logoutScreen) {
-                    logoutScreen.style.opacity = '0';
+        // --- LOGOUT LOGIC ---
+        if (logoutButton) {
+            logoutButton.addEventListener('click', function() {
+                const nowPlayingAudio = document.getElementById('nowPlayingAudio');
+                if (nowPlayingAudio && !nowPlayingAudio.paused) {
+                    nowPlayingAudio.pause();
+                }
+                sessionStorage.removeItem('isAngelLoggedIn');
+                if (mainContent) mainContent.style.display = 'none';
+                if (logoutScreen) {
+                    logoutScreen.style.display = 'flex';
+                    setTimeout(() => { logoutScreen.style.opacity = '1'; }, 10);
                 }
                 setTimeout(() => {
-                     location.reload(); // This will automatically show the password modal
-                }, 800); // Wait for fade out
-            }, 2500); // Show "See you soon" for 2.5s
+                    if(logoutScreen) logoutScreen.style.opacity = '0';
+                    setTimeout(() => { location.reload(); }, 800);
+                }, 2500);
+            });
+        }
+
+        // Tab switching
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                if (this.id === 'logoutButton') return;
+                const targetTab = this.getAttribute('data-tab');
+                tabs.forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                
+                tabContents.forEach(content => {
+                    if (content) { 
+                        content.classList.remove('active');
+                        if (content.id === targetTab) {
+                            content.classList.add('active');
+                        }
+                    }
+                });
+            });
         });
-    }
-    // --- END LOGOUT LOGIC ---
 
-
-    // Tab switching
-    const tabs = document.querySelectorAll('.tab');
-    const tabContents = document.querySelectorAll('.tab-content');
-    tabs.forEach(tab => {
-        tab.addEventListener('click', function() {
-            
-            // --- FIX: Don't run tab logic for logout button ---
-            if (this.id === 'logoutButton') {
-                return;
+        // Expandable love letter
+        ['loveLetter1', 'loveLetter2', 'loveLetter3'].forEach(id => {
+            const letter = document.getElementById(id);
+            if (letter) {
+                letter.addEventListener('click', function() {
+                    this.classList.toggle('expanded');
+                });
             }
-            // --- END FIX ---
+        });
 
-            const targetTab = this.getAttribute('data-tab');
-            tabs.forEach(t => t.classList.remove('active'));
-            this.classList.add('active');
-            
-            tabContents.forEach(content => {
-                if (content) { // Add check for content existence
-                    content.classList.remove('active');
-                    if (content.id === targetTab) {
-                        content.classList.add('active');
+        // Expandable artist songs
+        document.querySelectorAll('.artist').forEach(artist => {
+            const header = artist.querySelector('.artist-header');
+            if (header) {
+                header.addEventListener('click', function() {
+                    artist.classList.toggle('expanded');
+                });
+            }
+        });
+
+        // Floating elements
+        function addFloatingElements() {
+            for (let i = 0; i < 15; i++) {
+                const heart = document.createElement('div');
+                heart.classList.add('heart');
+                heart.innerHTML = '❤️';
+                heart.style.left = Math.random() * 100 + '%';
+                heart.style.top = Math.random() * 100 + '%';
+                heart.style.animationDelay = Math.random() * 5 + 's';
+                document.body.appendChild(heart);
+            }
+            for (let i = 0; i < 5; i++) {
+                const teddy = document.createElement('div');
+                teddy.classList.add('teddy-bear');
+                teddy.innerHTML = '🧸';
+                teddy.style.left = Math.random() * 100 + '%';
+                teddy.style.top = Math.random() * 100 + '%';
+                teddy.style.animationDelay = Math.random() * 5 + 's';
+                document.body.appendChild(teddy);
+            }
+        }
+        addFloatingElements();
+
+        // PH Clock
+        function updatePHClock() {
+            const clock = document.getElementById('phClock');
+            if (!clock) return;
+            const now = new Date();
+            const options = { timeZone: 'Asia/Manila', hour: '2-digit', minute: '2-digit', second: '2-digit', year: 'numeric', month: 'numeric', day: '2-digit', hour12: true };
+            clock.textContent = `PH: ${now.toLocaleString('en-US', options)}`;
+        }
+        updatePHClock();
+        setInterval(updatePHClock, 1000);
+
+        // Heart drop animation
+        function dropHearts() {
+            const container = document.getElementById('heartDropContainer');
+            if (!container) return;
+            const box = document.querySelector('.container');
+            if (!box) return;
+            const boxWidth = box.offsetWidth;
+            const heartCount = Math.floor(Math.random() * 2) + 2;
+            for (let i = 0; i < heartCount; i++) {
+                setTimeout(() => {
+                    const heart = document.createElement('span');
+                    heart.className = 'heart-drop';
+                    heart.textContent = '❤️';
+                    heart.style.left = (Math.random() * (boxWidth - 30) + 10) + 'px';
+                    heart.style.top = '0px';
+                    container.appendChild(heart);
+                    heart.addEventListener('animationend', () => { heart.remove(); });
+                }, i * 400);
+            }
+        }
+        if (sessionStorage.getItem('isAngelLoggedIn') === 'true') {
+            setInterval(dropHearts, 2000);
+        } else {
+            submitPassword.addEventListener('click', function() {
+                if (passwordInput.value.toLowerCase() === 'micacutie') {
+                     setInterval(dropHearts, 2000);
+                }
+            });
+        }
+
+        // --- MUSIC TAB FUNCTIONALITY ---
+        const artistList = document.getElementById('artistList');
+        if (artistList) {
+            const artists = Array.from(artistList.querySelectorAll('.artist'));
+            artists.sort((a, b) => {
+                const nameA = a.querySelector('.artist-header').textContent.trim().toLowerCase();
+                const nameB = b.querySelector('.artist-header').textContent.trim().toLowerCase();
+                return nameA.localeCompare(nameB);
+            });
+            artists.forEach(artist => artistList.appendChild(artist));
+        }
+
+        const artistSearch = document.getElementById('artistSearch');
+        if (artistSearch) {
+            artistSearch.addEventListener('input', function() {
+                const query = this.value.trim().toLowerCase();
+                const artists = artistList.querySelectorAll('.artist');
+                artists.forEach(artist => {
+                    const name = artist.querySelector('.artist-header').textContent.trim().toLowerCase();
+                    artist.style.display = name.includes(query) ? '' : 'none';
+                });
+            });
+        }
+
+        const nowPlayingTitle = document.getElementById('nowPlayingTitle');
+        const nextRandomBtn = document.getElementById('nextRandomBtn');
+        const nowPlayingAudio = document.getElementById('nowPlayingAudio');
+
+        function getAllSongs() {
+            const songs = [];
+            if (!artistList) return songs; 
+            artistList.querySelectorAll('.song-info').forEach(info => {
+                const title = info.querySelector('h4') ? info.querySelector('h4').textContent.trim() : '';
+                const artist = info.querySelector('p') ? info.querySelector('p').textContent.trim() : '';
+                const audio = info.querySelector('audio');
+                let src = '';
+                if (audio) {
+                    const mp3 = audio.querySelector('source[type="audio/mpeg"]');
+                    const ogg = audio.querySelector('source[type="audio/ogg"]');
+                    if (mp3) src = mp3.getAttribute('src');
+                    else if (ogg) src = ogg.getAttribute('src');
+                }
+                if (title && artist && src) {
+                    songs.push({ title, artist, src, audioElem: audio });
+                }
+            });
+            return songs;
+        }
+
+        let allSongs = getAllSongs();
+        let currentSongIndex = -1;
+
+        function pauseAllArtistAudio() {
+            allSongs.forEach(song => {
+                if (song.audioElem && !song.audioElem.paused) {
+                    song.audioElem.pause();
+                    song.audioElem.currentTime = 0;
+                }
+            });
+        }
+
+        function playSong(index) {
+            allSongs = getAllSongs(); 
+            if (!allSongs.length) return;
+            if (index < 0 || index >= allSongs.length) index = 0;
+            currentSongIndex = index;
+            const song = allSongs[index];
+
+            if (!nowPlayingTitle || !nowPlayingAudio) return; 
+
+            nowPlayingTitle.innerHTML = `<span style="color:#d81b60;">${song.title}</span> <span style="color:#888;">by</span> <span style="color:#d81b60;">${song.artist}</span>`;
+            nowPlayingAudio.src = song.src;
+            nowPlayingAudio.currentTime = 0;
+            nowPlayingAudio.play();
+            pauseAllArtistAudio();
+        }
+
+        function playRandomSong() {
+            allSongs = getAllSongs(); 
+            if (!allSongs.length) return;
+            let randomIndex;
+            do {
+                randomIndex = Math.floor(Math.random() * allSongs.length);
+            } while (allSongs.length > 1 && randomIndex === currentSongIndex);
+            playSong(randomIndex);
+        }
+
+        function attachAudioListeners() {
+            allSongs = getAllSongs();
+            allSongs.forEach((song, idx) => {
+                if (song.audioElem) {
+                    song.audioElem.controls = false;
+                    let playBtn = song.audioElem.parentNode.querySelector('.custom-play-btn');
+                    if (!playBtn) {
+                        playBtn = document.createElement('button');
+                        playBtn.className = 'custom-play-btn';
+                        playBtn.textContent = '▶️';
+                        playBtn.style.marginLeft = '10px';
+                        playBtn.style.background = '#fff';
+                        playBtn.style.border = '1px solid #d81b60';
+                        playBtn.style.color = '#d81b60';
+                        playBtn.style.borderRadius = '50%';
+                        playBtn.style.width = '32px';
+                        playBtn.style.height = '32px';
+                        playBtn.style.cursor = 'pointer';
+                        playBtn.style.fontSize = '18px';
+                        playBtn.style.transition = 'background 0.2s';
+                        playBtn.onmouseenter = () => playBtn.style.background = '#ffe4ef';
+                        playBtn.onmouseleave = () => playBtn.style.background = '#fff';
+                        song.audioElem.parentNode.appendChild(playBtn);
+                        playBtn.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            playSong(idx);
+                        });
                     }
                 }
             });
-        });
-    });
+        }
+        attachAudioListeners();
 
-    // Expandable love letter
-    ['loveLetter1', 'loveLetter2', 'loveLetter3','loveLetter4','loveLetter5','loveLetter6'].forEach(id => {
-        const letter = document.getElementById(id);
-        if (letter) {
-            letter.addEventListener('click', function() {
-                this.classList.toggle('expanded');
-            });
+        if (nowPlayingAudio) {
+            nowPlayingAudio.addEventListener('play', function() { pauseAllArtistAudio(); });
+            nowPlayingAudio.addEventListener('ended', playRandomSong);
+        }
+        if (nextRandomBtn) {
+            nextRandomBtn.addEventListener('click', playRandomSong);
+        }
+        if (nowPlayingTitle) {
+            nowPlayingTitle.textContent = 'None';
+        }
+
+        const mainBgOverlay = document.getElementById('mainBgOverlay');
+        function setMainBgOverlay(active) {
+            if (!mainBgOverlay) return;
+            if (active) mainBgOverlay.classList.add('active');
+            else mainBgOverlay.classList.remove('active');
+        }
+        if (nowPlayingAudio) {
+            nowPlayingAudio.addEventListener('play', () => setMainBgOverlay(true));
+            nowPlayingAudio.addEventListener('pause', () => setMainBgOverlay(false));
+            nowPlayingAudio.addEventListener('ended', () => setMainBgOverlay(false));
         }
     });
-
-    // Expandable artist songs in Music tab
-    document.querySelectorAll('.artist').forEach(artist => {
-        const header = artist.querySelector('.artist-header');
-        if (header) {
-            header.addEventListener('click', function() {
-                artist.classList.toggle('expanded');
-            });
-        }
-    });
-
-    // Add floating decorative elements
-    function addFloatingElements() {
-        for (let i = 0; i < 15; i++) {
-            const heart = document.createElement('div');
-            heart.classList.add('heart');
-            heart.innerHTML = '❤️';
-            heart.style.left = Math.random() * 100 + '%';
-            heart.style.top = Math.random() * 100 + '%';
-            heart.style.animationDelay = Math.random() * 5 + 's';
-            document.body.appendChild(heart);
-        }
-        for (let i = 0; i < 5; i++) {
-            const teddy = document.createElement('div');
-            teddy.classList.add('teddy-bear');
-            teddy.innerHTML = '🧸';
-            teddy.style.left = Math.random() * 100 + '%';
-            teddy.style.top = Math.random() * 100 + '%';
-            teddy.style.animationDelay = Math.random() * 5 + 's';
-            document.body.appendChild(teddy);
-        }
-    }
-    addFloatingElements();
-
-    // PH/Asia Time Clock
-    function updatePHClock() {
-        const clock = document.getElementById('phClock');
-        if (!clock) return;
-        const now = new Date();
-        const options = {
-            timeZone: 'Asia/Manila',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            year: 'numeric',
-            month: 'numeric',
-            day: '2-digit',
-            hour12: true
-        };
-        const timeString = now.toLocaleString('en-US', options);
-        clock.textContent = `PH: ${timeString}`;
-    }
-    updatePHClock();
-    setInterval(updatePHClock, 1000);
-
-    // Heart drop animation in main box
-    function dropHearts() {
-        const container = document.getElementById('heartDropContainer');
-        if (!container) return;
-        const box = document.querySelector('.container');
-        if (!box) return;
-        const boxWidth = box.offsetWidth;
-        const heartCount = Math.floor(Math.random() * 2) + 2;
-        for (let i = 0; i < heartCount; i++) {
-            setTimeout(() => {
-                const heart = document.createElement('span');
-                heart.className = 'heart-drop';
-                heart.textContent = '❤️';
-                heart.style.left = (Math.random() * (boxWidth - 30) + 10) + 'px';
-                heart.style.top = '0px';
-                container.appendChild(heart);
-                heart.addEventListener('animationend', () => {
-                    heart.remove();
-                });
-            }, i * 400);
-        }
-    }
-    // Only run animations if main content is visible
-    if (sessionStorage.getItem('isAngelLoggedIn') === 'true') {
-        setInterval(dropHearts, 2000);
-    } else {
-        // If not logged in, add a listener to start animations on login
-        submitPassword.addEventListener('click', function() {
-            if (passwordInput.value.toLowerCase() === 'angelcutie') {
-                 setInterval(dropHearts, 2000);
-            }
-        });
-    }
-
-
-    // --- MUSIC TAB FUNCTIONALITY ---
-
-    // 1. Auto-sort artists alphabetically
-    const artistList = document.getElementById('artistList');
-    if (artistList) {
-        const artists = Array.from(artistList.querySelectorAll('.artist'));
-        artists.sort((a, b) => {
-            const nameA = a.querySelector('.artist-header').textContent.trim().toLowerCase();
-            const nameB = b.querySelector('.artist-header').textContent.trim().toLowerCase();
-            return nameA.localeCompare(nameB);
-        });
-        artists.forEach(artist => artistList.appendChild(artist));
-    }
-
-    // 2. Artist search
-    const artistSearch = document.getElementById('artistSearch');
-    if (artistSearch) {
-        artistSearch.addEventListener('input', function() {
-            const query = this.value.trim().toLowerCase();
-            const artists = artistList.querySelectorAll('.artist');
-            artists.forEach(artist => {
-                const name = artist.querySelector('.artist-header').textContent.trim().toLowerCase();
-                artist.style.display = name.includes(query) ? '' : 'none';
-            });
-        });
-    }
-
-    // 3. Now Playing & Random Song Logic
-    const nowPlayingTitle = document.getElementById('nowPlayingTitle');
-    const nextRandomBtn = document.getElementById('nextRandomBtn');
-    const nowPlayingAudio = document.getElementById('nowPlayingAudio');
-
-    function getAllSongs() {
-        const songs = [];
-        // Make sure artistList exists before querying
-        if (!artistList) return songs; 
-        artistList.querySelectorAll('.song-info').forEach(info => {
-            const title = info.querySelector('h4') ? info.querySelector('h4').textContent.trim() : '';
-            const artist = info.querySelector('p') ? info.querySelector('p').textContent.trim() : '';
-            const audio = info.querySelector('audio');
-            let src = '';
-            if (audio) {
-                const mp3 = audio.querySelector('source[type="audio/mpeg"]');
-                const ogg = audio.querySelector('source[type="audio/ogg"]');
-                if (mp3) src = mp3.getAttribute('src');
-                else if (ogg) src = ogg.getAttribute('src');
-            }
-            if (title && artist && src) {
-                songs.push({ title, artist, src, audioElem: audio });
-            }
-        });
-        return songs;
-    }
-
-    let allSongs = getAllSongs();
-    let currentSongIndex = -1;
-    let isUserSeeking = false;
-
-    // Pause all artist audio elements
-    function pauseAllArtistAudio() {
-        allSongs.forEach(song => {
-            if (song.audioElem && !song.audioElem.paused) {
-                song.audioElem.pause();
-                song.audioElem.currentTime = 0;
-            }
-        });
-    }
-
-    // Play a song by index
-    function playSong(index) {
-        allSongs = getAllSongs(); // Refresh song list
-        if (!allSongs.length) return;
-        if (index < 0 || index >= allSongs.length) index = 0;
-        currentSongIndex = index;
-        const song = allSongs[index];
-
-        if (!nowPlayingTitle || !nowPlayingAudio) return; // Guard clause
-
-        // Update Now Playing UI
-        nowPlayingTitle.innerHTML = `<span style="color:#d81b60;">${song.title}</span> <span style="color:#888;">by</span> <span style="color:#d81b60;">${song.artist}</span>`;
-
-        // Set audio src and play
-        nowPlayingAudio.src = song.src;
-        nowPlayingAudio.currentTime = 0;
-        nowPlayingAudio.play();
-
-        // Pause all artist audio elements and sync their state
-        pauseAllArtistAudio();
-    }
-
-    // Play a random song, not repeating the current one
-    function playRandomSong() {
-        allSongs = getAllSongs(); // Refresh song list
-        if (!allSongs.length) return;
-        let randomIndex;
-        do {
-            randomIndex = Math.floor(Math.random() * allSongs.length);
-        } while (allSongs.length > 1 && randomIndex === currentSongIndex);
-        playSong(randomIndex);
-    }
-
-    // Listen for play events on all artist audio elements
-    function attachAudioListeners() {
-        allSongs = getAllSongs();
-        allSongs.forEach((song, idx) => {
-            // Remove default controls and add a custom play button
-            if (song.audioElem) {
-                song.audioElem.controls = false;
-                // Add a custom play button if not already present
-                let playBtn = song.audioElem.parentNode.querySelector('.custom-play-btn');
-                if (!playBtn) {
-                    playBtn = document.createElement('button');
-                    playBtn.className = 'custom-play-btn';
-                    playBtn.textContent = '▶️';
-                    playBtn.style.marginLeft = '10px';
-                    playBtn.style.background = '#fff';
-                    playBtn.style.border = '1px solid #d81b60';
-                    playBtn.style.color = '#d81b60';
-                    playBtn.style.borderRadius = '50%';
-                    playBtn.style.width = '32px';
-                    playBtn.style.height = '32px';
-                    playBtn.style.cursor = 'pointer';
-                    playBtn.style.fontSize = '18px';
-                    playBtn.style.transition = 'background 0.2s';
-                    playBtn.onmouseenter = () => playBtn.style.background = '#ffe4ef';
-                    playBtn.onmouseleave = () => playBtn.style.background = '#fff';
-                    song.audioElem.parentNode.appendChild(playBtn);
-                    playBtn.addEventListener('click', function(e) {
-                        e.stopPropagation();
-                        playSong(idx);
-                    });
-                }
-            }
-        });
-    }
-    attachAudioListeners();
-
-    // Now Playing audio events
-    if (nowPlayingAudio) {
-        nowPlayingAudio.addEventListener('play', function() {
-            // Pause all artist audio elements
-            pauseAllArtistAudio();
-        });
-        nowPlayingAudio.addEventListener('ended', playRandomSong);
-    }
-
-    // Next Random button event
-    if (nextRandomBtn) {
-        nextRandomBtn.addEventListener('click', playRandomSong);
-    }
-
-    // Initial state
-    if (nowPlayingTitle) {
-        nowPlayingTitle.textContent = 'None';
-    }
-
-    // --- END MUSIC TAB FUNCTIONALITY ---
-
-    const mainBgOverlay = document.getElementById('mainBgOverlay');
-
-    function setMainBgOverlay(active) {
-        if (!mainBgOverlay) return;
-        if (active) {
-            mainBgOverlay.classList.add('active');
-        } else {
-            mainBgOverlay.classList.remove('active');
-        }
-    }
-
-    if (nowPlayingAudio) {
-        nowPlayingAudio.addEventListener('play', () => setMainBgOverlay(true));
-        nowPlayingAudio.addEventListener('pause', () => setMainBgOverlay(false));
-        nowPlayingAudio.addEventListener('ended', () => setMainBgOverlay(false));
-    }
-});
     </script>
 </body>
 </html>
