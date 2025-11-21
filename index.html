@@ -1066,17 +1066,17 @@
             <!-- Notes Tab -->
             <div class="tab-content" id="notes">
                 <h2>Daily reminders</h2>
-                <h4>Update: 11-21-2025 (7:50AM)</h4>
+                <h4>Update: 11-20-2025 (9:53 PM)</h4>
                 <br>
                 <br>
                 <div class="note">
-                    <p>Enjoy your day!</p>
+                    <p>Enjoy your day.</p>
                 </div>
                 <div class="note">
-                    <p>Eat your meal on time.</p>
+                    <p>Eat your meal po, wag palipas.</p>
                 </div>
                 <div class="note">
-                    <p>Thank you so much again for opening this virtual diary.</p>
+                    <p>Thank you so much for opening this virtual diary.</p>
                 </div>
                 <div class="note">
                     <p>Get enough rest ha.</p>
@@ -1085,10 +1085,10 @@
                     <p>I'm always here for you.</p>
                 </div>
                 <div class="note">
-                    <p>Let's talk whenever you're free.</p>
+                    <p>Set your mind at peace always.</p>
                 </div>
                 <div class="note">
-                    <p>Ingat ka palagi!</p>
+                    <p>Open it whenever you're free, daily letters din lalagay ko here for you.</p>
                 </div>
             </div>
             
@@ -1154,30 +1154,38 @@
     <!-- Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, serverTimestamp, query, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-        // Global Firebase logic
-        const firebaseConfig = JSON.parse(__firebase_config);
+        // =========================================================
+        // IMPORTANT: PASTE YOUR FIREBASE CONFIGURATION HERE
+        // =========================================================
+       const firebaseConfig = {
+            apiKey: "AIzaSyCPq_nCm9udajtm6-blItmSqgA0NuEOemI",
+            authDomain: "mica-cutie.firebaseapp.com",
+            projectId: "mica-cutie",
+            storageBucket: "mica-cutie.firebasestorage.app",
+            messagingSenderId: "323886769074",
+            appId: "1:323886769074:web:a0a97cee18d40d05597aab",
+            measurementId: "G-N60M2CTS9H"
+        };
+        // =========================================================
+
+        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
         // Auth Logic
         async function initAuth() {
             try {
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
+                // Anonymous auth is simpler for public static sites
+                await signInAnonymously(auth);
                 console.log("Firebase Auth Successful");
-                // After auth is successful, setup listeners
                 setupFreedomWall();
             } catch (error) {
                 console.error("Auth Failed", error);
-                document.querySelector('.empty-wall-message').textContent = "Connection failed. Please refresh.";
+                document.querySelector('.empty-wall-message').innerHTML = "Connection failed. Please check your Firebase Config in the code.";
             }
         }
 
@@ -1188,8 +1196,8 @@
             const fwPostBtn = document.getElementById('fwPostBtn');
             const messagesContainer = document.getElementById('fwMessagesContainer');
             
-            // Reference to the public collection
-            const messagesCol = collection(db, 'artifacts', appId, 'public', 'data', 'messages');
+            // Reference to a standard collection named 'messages'
+            const messagesCol = collection(db, 'messages');
 
             // 1. Post Message
             fwPostBtn.addEventListener('click', async () => {
@@ -1218,7 +1226,7 @@
                     fwPostBtn.disabled = false;
                 } catch (e) {
                     console.error("Error posting: ", e);
-                    alert("Failed to post message. Please try again.");
+                    alert("Failed to post. Check your internet or Firebase console rules.");
                     fwPostBtn.textContent = "Post Message";
                     fwPostBtn.disabled = false;
                 }
@@ -1229,7 +1237,6 @@
                 const messages = [];
                 snapshot.forEach(doc => {
                     const data = doc.data();
-                    // We need a sortable timestamp. If serverTimestamp hasn't synced yet, use Date.now()
                     const time = data.timestamp ? data.timestamp.toMillis() : Date.now();
                     messages.push({
                         id: doc.id,
@@ -1239,7 +1246,7 @@
                     });
                 });
 
-                // Sort descending (newest first) in JS because we can't use orderBy in strict mode rules easily
+                // Sort descending (newest first) client-side
                 messages.sort((a, b) => b.time - a.time);
 
                 // Render
@@ -1266,7 +1273,7 @@
                 });
             }, (error) => {
                 console.error("Snapshot error:", error);
-                messagesContainer.innerHTML = '<div class="empty-wall-message">Error loading messages.</div>';
+                messagesContainer.innerHTML = '<div class="empty-wall-message">Error loading messages. Check console.</div>';
             });
         }
 
