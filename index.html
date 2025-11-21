@@ -2,7 +2,21 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Updated Viewport for App-like feel (prevents zooming) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <!-- PWA / App-Like Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#ffd1dc">
+    <meta name="application-name" content="For Mica">
+    <meta name="apple-mobile-web-app-title" content="For Mica">
+    
+    <!-- App Icon (using a heart emoji as icon fallback) -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>❤️</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>❤️</text></svg>">
+
     <title>For You Mica</title>
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
@@ -15,6 +29,8 @@
             -moz-user-select: none;
             -ms-user-select: none;
             user-select: none;
+            /* Remove tap highlight on mobile */
+            -webkit-tap-highlight-color: transparent;
         }
         
         /* Prevent printing */
@@ -36,7 +52,8 @@
             align-items: center;
             overflow-x: hidden;
             color: #8a1c4a;
-            /* Do not change this background! */
+            /* Fix for iOS momentum scrolling */
+            -webkit-overflow-scrolling: touch;
         }
         
         /* Password Modal */
@@ -83,7 +100,7 @@
             text-align: center;
             outline: none;
             transition: border-color 0.3s;
-            /* Allow selection inside input so they can type/edit password */
+            /* Allow selection inside input */
             -webkit-user-select: text;
             -moz-user-select: text;
             -ms-user-select: text;
@@ -108,6 +125,27 @@
         .submit-btn:hover {
             background: #b71550;
             transform: scale(1.05);
+        }
+
+        .notification-btn {
+            background: #ffb7c5;
+            color: #d81b60;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            margin-left: auto;
+            margin-right: auto;
+            transition: background 0.3s;
+        }
+
+        .notification-btn:hover {
+            background: #ff9eb0;
         }
         
         /* Welcome Screen */
@@ -163,6 +201,8 @@
             background: white;
             border-radius: 20px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            /* Padding bottom for safe area on iPhone X+ */
+            padding-bottom: env(safe-area-inset-bottom);
         }
         
         .tabs {
@@ -243,12 +283,10 @@
             color: #d81b60;
         }
         
-        /* MODIFIED: Scrollable Letter Content */
         .letter-content {
             max-height: 0;
             overflow: hidden;
             transition: max-height 0.5s ease;
-            /* Allow text selection inside letter */
             -webkit-user-select: text;
             -moz-user-select: text;
             -ms-user-select: text;
@@ -256,13 +294,12 @@
         }
         
         .letter.expanded .letter-content {
-            /* Changed from fixed px to vh for better responsiveness */
             max-height: 60vh; 
-            overflow-y: auto; /* Enables scrolling for long letters */
-            padding-right: 10px; /* Prevents scrollbar from covering text */
+            overflow-y: auto; 
+            padding-right: 10px;
         }
         
-        /* Custom Scrollbar Styling for Letters and Wall */
+        /* Custom Scrollbar */
         .letter-content::-webkit-scrollbar,
         .fw-messages::-webkit-scrollbar,
         .fw-textarea::-webkit-scrollbar {
@@ -282,13 +319,6 @@
             background: #ffb7c5;
             border-radius: 4px;
         }
-
-        .letter-content::-webkit-scrollbar-thumb:hover,
-        .fw-messages::-webkit-scrollbar-thumb:hover,
-        .fw-textarea::-webkit-scrollbar-thumb:hover {
-            background: #d81b60;
-        }
-
         
         /* Music Tab */
         .song {
@@ -346,7 +376,6 @@
             height: 200px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             transition: transform 0.3s ease;
-            /* Prevent drag on images */
             -webkit-user-drag: none;
             pointer-events: none;
         }
@@ -377,7 +406,6 @@
             font-size: 15px;
             outline: none;
             transition: border-color 0.3s;
-            /* Enable typing */
             -webkit-user-select: text;
             -moz-user-select: text;
             -ms-user-select: text;
@@ -831,33 +859,6 @@
                        <br>
                         <p>Sincerely yours,</p>
                         <p>B from 4A</p>
-                    </div>
-                </div>
-                <div class="letter" id="loveLetter2">
-                    <div class="letter-header">
-                        <h3>A letter for you (11-21-2025)</h3>
-                        <span>Click to open</span>
-                    </div>
-                    <div class="letter-content" style="text-align: justify">
-                        <p>Dear Mica,</p>
-                        <br>
-                        <p> 
-                          Good morning!!
-                        </p>
-                        <br>
-                        <p> 
-                            I wanted to start your day with something to make you smile. Even though the sun is already up, alam kong ikaw, hindi pa nakakapahinga.
-                            Honestly, it’s a bit strange writing this because we haven't even met in person yet. Pero alam mo ‘yon? There’s something about you that feels familiar, something that pulls me in kahit sa malayo lang ako nakatingin. I catch myself wondering what it would be like to finally stand in front of you, to see if your energy is as magnetic in person as it feels from here. I really hope that day comes soon.
-                            Pero bago ang lahat—please, matulog ka na muna. I know quiet nights can be addictive, pero kailangan din ng pahinga ng katawan mo. Your eyes are too captivating to be tired, and your mind deserves a break. Concern lang ako kasi gusto kong okay ka palagi. So please, try to get some sleep immediately after reading this.
-                            I also wanted to tell you something I’ve been thinking about. You are incredibly beautiful, but not in the typical way people just say "maganda ka." Yours is different. It’s not just about your face; it’s the vibe you carry. Para kang paboritong kanta na hindi nakakasawang pakinggan, or a view na mas gumaganda habang mas tinititigan. You have this effortless charm that doesn't even try to be attractive, yet it demands attention. Yung ganda mo, hindi lang nakikita ng mata, nararamdaman din. It’s rare, and honestly? It’s distracting in the best way possible.
-                            I hope you have a wonderful time. Enjoy your day, whatever it brings. Huwag mong hahayaang masira ng kahit sino ang mood mo. And please, mag-ingat ka palagi, okay? The world is a better place with you safe and happy in it. If ever you find yourself free later, or bored, or just want someone to listen... usap tayo? I’d love to hear about your day.
-                        </p>
-                        <br>
-                        <p>Pahinga na din ha!!</p>
-                       <br>
-                       <br>
-                        <p>Sincerely yours,</p>
-                        <p>B from 4A</p>
                         <!-- Added extra content to demonstrate scrolling -->
                         <br><br>
                         <p style="opacity: 0.7; font-size: 0.9em;">
@@ -1093,7 +1094,7 @@
             <!-- Notes Tab -->
             <div class="tab-content" id="notes">
                 <h2>Daily reminders</h2>
-                <h4>Update: 11-21-2025 (8:30AM)</h4>
+                <h4>Update: 11-20-2025 (9:53 PM)</h4>
                 <br>
                 <br>
                 <div class="note">
@@ -1103,7 +1104,7 @@
                     <p>Eat your meal po, wag palipas.</p>
                 </div>
                 <div class="note">
-                    <p>Thank you so much for opening again this virtual diary.</p>
+                    <p>Thank you so much for opening this virtual diary.</p>
                 </div>
                 <div class="note">
                     <p>Get enough rest ha.</p>
@@ -1112,10 +1113,10 @@
                     <p>I'm always here for you.</p>
                 </div>
                 <div class="note">
-                    <p>Ingat ka palagi.</p>
+                    <p>Set your mind at peace always.</p>
                 </div>
                 <div class="note">
-                    <p>You can use freedom wall and realtime natin makikita kung ano man nakalagay doon.</p>
+                    <p>Open it whenever you're free, daily letters din lalagay ko here for you.</p>
                 </div>
             </div>
             
@@ -1147,6 +1148,7 @@
             <!-- Freedom Wall Tab -->
             <div class="tab-content" id="freedom-wall">
                 <h2>Freedom Wall 🕊️</h2>
+                <button class="notification-btn" id="enableNotifyBtn">🔔 Enable Notifications</button>
                 <p style="margin-bottom: 15px; color: #666; font-size: 14px;">Leave a message for everyone to see.</p>
                 
                 <div class="freedom-input-area">
@@ -1187,7 +1189,7 @@
         // =========================================================
         // IMPORTANT: PASTE YOUR FIREBASE CONFIGURATION HERE
         // =========================================================
-       const firebaseConfig = {
+        const firebaseConfig = {
             apiKey: "AIzaSyCPq_nCm9udajtm6-blItmSqgA0NuEOemI",
             authDomain: "mica-cutie.firebaseapp.com",
             projectId: "mica-cutie",
@@ -1216,15 +1218,53 @@
             }
         }
 
+        // --- Notification Logic ---
+        function requestNotificationPermission() {
+            if (!("Notification" in window)) {
+                alert("This browser does not support desktop notifications");
+                return;
+            }
+            
+            Notification.requestPermission().then(permission => {
+                if (permission === "granted") {
+                    const btn = document.getElementById('enableNotifyBtn');
+                    if(btn) {
+                        btn.textContent = "✅ Notifications Enabled";
+                        btn.style.background = "#d1e7dd";
+                        btn.style.color = "#0f5132";
+                    }
+                    new Notification("For You Mica", {
+                        body: "You will now be notified when someone posts a message!",
+                        icon: "https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/2764.png" // Heart Icon
+                    });
+                }
+            });
+        }
+
         // --- Freedom Wall Logic ---
         function setupFreedomWall() {
             const fwName = document.getElementById('fwName');
             const fwMessage = document.getElementById('fwMessage');
             const fwPostBtn = document.getElementById('fwPostBtn');
             const messagesContainer = document.getElementById('fwMessagesContainer');
+            const notifyBtn = document.getElementById('enableNotifyBtn');
+            
+            // Setup Notification Button
+            if(notifyBtn) {
+                if(Notification.permission === 'granted') {
+                    notifyBtn.textContent = "✅ Notifications Enabled";
+                    notifyBtn.style.background = "#d1e7dd";
+                    notifyBtn.style.color = "#0f5132";
+                }
+                notifyBtn.addEventListener('click', requestNotificationPermission);
+            }
             
             // Reference to a standard collection named 'messages'
             const messagesCol = collection(db, 'messages');
+            
+            // Track initial load to prevent spamming notifications for old messages
+            let isInitialLoad = true;
+            let latestMessageTime = Date.now(); // Start tracking from now
 
             // 1. Post Message
             fwPostBtn.addEventListener('click', async () => {
@@ -1236,7 +1276,6 @@
                     return;
                 }
 
-                // Simple loading state
                 fwPostBtn.textContent = "Posting...";
                 fwPostBtn.disabled = true;
 
@@ -1244,10 +1283,9 @@
                     await addDoc(messagesCol, {
                         name: name,
                         message: text,
-                        timestamp: serverTimestamp() // Server time
+                        timestamp: serverTimestamp() 
                     });
                     
-                    // Clear inputs
                     fwMessage.value = '';
                     fwPostBtn.textContent = "Post Message";
                     fwPostBtn.disabled = false;
@@ -1259,9 +1297,33 @@
                 }
             });
 
-            // 2. Listen for Messages
+            // 2. Listen for Messages & Handle Notifications
             onSnapshot(messagesCol, (snapshot) => {
                 const messages = [];
+                
+                // Process Changes for Notifications
+                snapshot.docChanges().forEach((change) => {
+                    if (change.type === "added") {
+                        const data = change.doc.data();
+                        const msgTime = data.timestamp ? data.timestamp.toMillis() : Date.now();
+                        
+                        // Only notify if:
+                        // 1. It's not the initial page load
+                        // 2. The message is actually new (newer than when we loaded the page)
+                        // 3. Permissions are granted
+                        if (!isInitialLoad && msgTime > latestMessageTime && Notification.permission === "granted") {
+                             // Optional: Check if the message is from me (client-side check only works if we stored my name)
+                             if(data.name !== fwName.value) { // Don't notify for my own message
+                                 new Notification(`New Message from ${data.name}`, {
+                                    body: data.message,
+                                    icon: "https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f48c.png" // Love Letter Icon
+                                });
+                             }
+                        }
+                    }
+                });
+
+                // Standard Rendering Logic
                 snapshot.forEach(doc => {
                     const data = doc.data();
                     const time = data.timestamp ? data.timestamp.toMillis() : Date.now();
@@ -1273,31 +1335,39 @@
                     });
                 });
 
-                // Sort descending (newest first) client-side
+                // Update latest time tracker
+                if(messages.length > 0) {
+                     // Get the max time from current messages to ensure we only notify for newer ones
+                     const maxTime = Math.max(...messages.map(m => m.time));
+                     if(maxTime > latestMessageTime) latestMessageTime = maxTime;
+                }
+
                 messages.sort((a, b) => b.time - a.time);
 
-                // Render
                 messagesContainer.innerHTML = '';
                 if (messages.length === 0) {
                     messagesContainer.innerHTML = '<div class="empty-wall-message">No messages yet. Be the first!</div>';
-                    return;
+                } else {
+                    messages.forEach(msg => {
+                        const dateObj = new Date(msg.time);
+                        const dateStr = dateObj.toLocaleDateString() + ' ' + dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+                        const card = document.createElement('div');
+                        card.className = 'fw-message-card';
+                        card.innerHTML = `
+                            <div class="fw-message-header">
+                                <span class="fw-author">${escapeHtml(msg.name)}</span>
+                                <span>${dateStr}</span>
+                            </div>
+                            <div class="fw-text">${escapeHtml(msg.message)}</div>
+                        `;
+                        messagesContainer.appendChild(card);
+                    });
                 }
-
-                messages.forEach(msg => {
-                    const dateObj = new Date(msg.time);
-                    const dateStr = dateObj.toLocaleDateString() + ' ' + dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-                    const card = document.createElement('div');
-                    card.className = 'fw-message-card';
-                    card.innerHTML = `
-                        <div class="fw-message-header">
-                            <span class="fw-author">${escapeHtml(msg.name)}</span>
-                            <span>${dateStr}</span>
-                        </div>
-                        <div class="fw-text">${escapeHtml(msg.message)}</div>
-                    `;
-                    messagesContainer.appendChild(card);
-                });
+                
+                // Set initial load to false after first render
+                isInitialLoad = false;
+                
             }, (error) => {
                 console.error("Snapshot error:", error);
                 messagesContainer.innerHTML = '<div class="empty-wall-message">Error loading messages. Check console.</div>';
