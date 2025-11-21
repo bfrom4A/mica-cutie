@@ -1545,7 +1545,7 @@
                             <div class="file-input-wrapper" onclick="document.getElementById('musicFileInput').click()">
                                 <p style="color: #888; margin-bottom: 5px; font-size: 12px;">📁 Click to Select MP3</p>
                                 <span id="fileNameDisplay" style="font-size: 12px; color: #d81b60; display: block;">No file selected</span>
-                                <input type="file" id="musicFileInput" accept="audio/*" style="display: none;" onchange="document.getElementById('fileNameDisplay').textContent = this.files[0] ? this.files[0].name : 'No file selected'">
+                                <input type="file" id="musicFileInput" accept="audio/mpeg" style="display: none;" onchange="document.getElementById('fileNameDisplay').textContent = this.files[0] ? this.files[0].name : 'No file selected'">
                             </div>
                             
                             <button id="startUploadBtn" class="submit-btn" style="width: 100%;">Upload & Sync</button>
@@ -1784,6 +1784,36 @@
         
         // Global State for User Context
         let currentUser = sessionStorage.getItem('loggedInUser') || null; 
+        
+        // --- Shared utility functions ---
+        
+        /** Converts a File object to a Base64 string (content only). */
+        const toBase64 = file => new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result.split(',')[1]);
+            reader.onerror = error => reject(error);
+        });
+
+        /** Fetches the SHA hash of a file in a GitHub repository, used for updates. */
+        async function getSha(repo, path, token) {
+            const [owner, name] = repo.split('/');
+            const apiUrl = `https://api.github.com/repos/${owner}/${name}/contents/${path}`;
+            const response = await fetch(apiUrl, {
+                headers: { 'Authorization': `token ${token}` }
+            });
+            if (response.status === 200) {
+                const data = await response.json();
+                return data.sha;
+            }
+            return null; // File does not exist
+        }
+
+        function escapeHtml(text) {
+            if (!text) return text;
+            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+        // --- End Shared utility functions ---
 
         // Auth Logic (Anonymous by default for viewers)
         async function initAuth() {
@@ -1917,15 +1947,15 @@
                         "https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/1eaad721-3375-4d97-a5fa-cbf8a87d60b8.png",
                         "https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/73632299-5dde-4ded-805a-88a7dcb4b5e4.png",
                         "https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/e9890063-b481-46f6-97a1-9fc753211e19.png",
-                        "https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/4bc3dffd-4971-4223-b7e4-3699d2b97bbe.png",
-                        "https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/d0daff3c-1751-492b-9b74-de28ac48d384.png",
-                        "https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/51f3ca74-2471-403f-bb99-751536acd7d9.png"
+                        "https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/4bc3dffd-4971-4223-b7e4-3699d2b4b5e4.png", // Using placeholder for example
+                        "https://placehold.co/200x200/ffb7c5/d81b60?text=Placeholder+4",
+                        "https://placehold.co/200x200/ffb7c5/d81b60?text=Placeholder+5"
                     ];
                     
                     defaultImages.forEach(url => {
                         const item = document.createElement('div');
                         item.className = 'gallery-item';
-                        item.innerHTML = `<img src="${url}" alt="Default Flower">`;
+                        item.innerHTML = `<img src="${url}" alt="Default Flower" onerror="this.src='https://placehold.co/200x200/ffb7c5/d81b60?text=Image+Error'">`;
                         galleryContainer.appendChild(item);
                     });
                     return;
@@ -1938,7 +1968,7 @@
                         const item = document.createElement('div');
                         item.className = 'gallery-item';
                         // Add onerror fallback
-                        item.innerHTML = `<img src="${data.url}" alt="${escapeHtml(data.caption || 'Image')}" onerror="this.src='https://via.placeholder.com/200?text=Image+Error'">`;
+                        item.innerHTML = `<img src="${data.url}" alt="${escapeHtml(data.caption || 'Image')}" onerror="this.src='https://placehold.co/200x200/ffb7c5/d81b60?text=Image+Error'">`;
                         galleryContainer.appendChild(item);
                     }
                 });
@@ -1994,9 +2024,6 @@
             });
 
             // 2. Load Notes
-            // We use a collection for notes to keep it simpler with prefixed collections
-            // Or we can use a single doc in a 'content' collection like `content/${user}_notes`
-            // Let's use `content/${user}_notes`
             const notesDocRef = doc(db, 'content', `${user}_daily_notes`);
             const notesContainer = document.getElementById('notesContainer');
             const updateDateLabel = document.getElementById('notesUpdateDate');
@@ -2091,6 +2118,7 @@
                     mainAdminDiv.style.display = 'none';
                     adminTargetUser = null;
                 } else if (pass) {
+                    // Using custom modal is better, but alert for brevity on admin screen
                     alert("Wrong password!");
                 }
             };
@@ -2254,14 +2282,32 @@
 
             setupAdminSongList(); // Shared Music Management
             
-            // ... (GitHub Logic remains same) ...
-            // (For brevity, I'm keeping the existing music logic hooks but ensuring they work)
+            // GitHub Login Logic
             const ghLoginBtn = document.getElementById('ghLoginBtn');
             const uploadBtn = document.getElementById('startUploadBtn');
-            // ... reusing existing GitHub logic ...
+
+            async function fetchRepositories() {
+                try {
+                    const response = await fetch('https://api.github.com/user/repos?sort=updated&per_page=100', { headers: { 'Authorization': `token ${githubToken}` } });
+                    const repos = await response.json();
+                    const repoSelect = document.getElementById('ghRepoSelect');
+                    repoSelect.innerHTML = '<option value="">-- Select Repository --</option>';
+                    if (Array.isArray(repos)) {
+                        repos.forEach(repo => {
+                            const opt = document.createElement('option');
+                            opt.value = repo.full_name; 
+                            opt.textContent = repo.name;
+                            repoSelect.appendChild(opt);
+                        });
+                    } else {
+                        repoSelect.innerHTML = '<option value="">Error fetching repos</option>';
+                    }
+                } catch (e) { console.error("Error fetching repos:", e); }
+            }
+
             ghLoginBtn.onclick = async () => {
                 const provider = new GithubAuthProvider();
-                provider.addScope('repo'); 
+                provider.addScope('repo'); // Request 'repo' scope for write access
                 try {
                     const result = await signInWithPopup(auth, provider);
                     const credential = GithubAuthProvider.credentialFromResult(result);
@@ -2269,31 +2315,124 @@
                     document.getElementById('ghStatusBox').style.display = 'none';
                     document.getElementById('ghAuthorizedUI').style.display = 'block';
                     fetchRepositories();
-                } catch (e) { alert("GitHub Login Failed"); }
+                } catch (e) { 
+                    alert("GitHub Login Failed. Ensure pop-ups are allowed and try again.");
+                    console.error("GitHub Login Failed:", e);
+                }
             };
-            // ... (fetchRepositories, scanMusicBtn, startUploadBtn logic same as before) ...
-            // Re-declaring fetchRepositories for scope within setupAdminConsole
-             async function fetchRepositories() {
-                try {
-                    const response = await fetch('https://api.github.com/user/repos?sort=updated&per_page=100', { headers: { 'Authorization': `token ${githubToken}` } });
-                    const repos = await response.json();
-                    const repoSelect = document.getElementById('ghRepoSelect');
-                    repoSelect.innerHTML = '<option value="">-- Select Repository --</option>';
-                    repos.forEach(repo => {
-                        const opt = document.createElement('option');
-                        opt.value = repo.full_name; opt.textContent = repo.name;
-                        repoSelect.appendChild(opt);
-                    });
-                } catch (e) {}
-            }
-            // Add upload logic click handler
+            
+            // --- IMPLEMENTED MUSIC UPLOAD LOGIC ---
+            
             uploadBtn.onclick = async () => {
-                 // Same upload logic as previous version...
-                 // Note: Music is shared, so it always goes to 'songs' collection
-                 const repoName = document.getElementById('ghRepoSelect').value;
-                 // ... (rest of upload logic)
-                 alert("Music upload logic placeholder - ensure previous logic is here");
+                const repoFullName = document.getElementById('ghRepoSelect').value;
+                const artistName = document.getElementById('uploadArtistName').value.trim();
+                const songTitle = document.getElementById('uploadSongTitle').value.trim();
+                const fileInput = document.getElementById('musicFileInput');
+                const statusText = document.getElementById('musicStatus');
+
+                if (!repoFullName || !artistName || !songTitle || !fileInput.files.length) {
+                    alert("Please select a repository, a music file, and fill in all song details.");
+                    return;
+                }
+                if (!githubToken) {
+                    alert("GitHub connection failed. Please log in again.");
+                    return;
+                }
+
+                const file = fileInput.files[0];
+                // Sanitize filename: Replace non-alphanumeric/spaces/hyphens/dots and replace spaces with underscores
+                const baseFileName = `${artistName} - ${songTitle}`.replace(/[^a-zA-Z0-9-.\s]/g, '').replace(/\s+/g, '_');
+                const fileName = `${baseFileName}.mp3`;
+                const filePath = `music/${fileName}`;
+                
+                const [owner, repoName] = repoFullName.split('/');
+                // Construct the public raw content URL
+                const rawContentUrl = `https://raw.githubusercontent.com/${owner}/${repoName}/main/${filePath}`;
+
+                statusText.textContent = "1/3: Reading file...";
+                
+                try {
+                    const base64Content = await toBase64(file);
+                    
+                    statusText.textContent = "2/3: Checking GitHub status...";
+                    // Check for existing file SHA to determine if we update or create
+                    const existingSha = await getSha(repoFullName, filePath, githubToken);
+
+                    const githubApiUrl = `https://api.github.com/repos/${repoFullName}/contents/${filePath}`;
+                    
+                    const commitMessage = existingSha 
+                        ? `Update music: ${fileName}`
+                        : `Add new music: ${fileName}`;
+
+                    const uploadPayload = {
+                        message: commitMessage,
+                        content: base64Content,
+                        sha: existingSha, // Include SHA if updating an existing file
+                        branch: 'main' 
+                    };
+
+                    statusText.textContent = "2/3: Uploading to GitHub...";
+                    
+                    const ghResponse = await fetch(githubApiUrl, {
+                        method: 'PUT',
+                        headers: { 
+                            'Authorization': `token ${githubToken}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(uploadPayload)
+                    });
+
+                    if (!ghResponse.ok) {
+                        const errorData = await ghResponse.json();
+                        throw new Error(`GitHub API Error: ${errorData.message || ghResponse.statusText}`);
+                    }
+                    
+                    statusText.textContent = "3/3: Syncing with Firestore...";
+
+                    // 3. Sync to Firestore (Shared Collection 'songs')
+                    const songsCollectionRef = collection(db, 'songs');
+                    // Check for existing song entry based on URL to prevent duplicates
+                    const q = query(songsCollectionRef, where('url', '==', rawContentUrl));
+                    const existingDocs = await getDocs(q);
+
+                    const songData = {
+                        title: songTitle,
+                        artist: artistName,
+                        url: rawContentUrl,
+                        githubPath: filePath,
+                        timestamp: serverTimestamp()
+                    };
+
+                    if (existingDocs.empty) {
+                        // New song, add it
+                        await addDoc(songsCollectionRef, songData);
+                    } else {
+                        // Existing song, update its metadata
+                        const docId = existingDocs.docs[0].id;
+                        await setDoc(doc(db, 'songs', docId), songData, { merge: true });
+                    }
+
+                    statusText.textContent = "✅ Upload and Sync Successful!";
+                    // Using a custom toast/alert for user confirmation
+                    showToast("Success! 🎵", `"${songTitle}" synced to library.`, "✅");
+                    
+                    // Clear inputs
+                    document.getElementById('uploadArtistName').value = '';
+                    document.getElementById('uploadSongTitle').value = '';
+                    fileInput.value = ''; // Clear file input
+                    document.getElementById('fileNameDisplay').textContent = 'No file selected';
+
+                } catch (e) {
+                    console.error("Upload/Sync Error:", e);
+                    statusText.textContent = `❌ Upload Failed: ${e.message}`;
+                    // More specific user feedback
+                    alert("Upload Failed. Possible issues: File size > 25MB (GitHub limit), incorrect repository permissions, or token expiration.");
+                } finally {
+                    // Reset status text after a delay
+                    setTimeout(() => statusText.textContent = '', 5000);
+                }
             }
+            // --- END IMPLEMENTED MUSIC UPLOAD LOGIC ---
         }
 
         // --- New Function: Manage Admin Song List (Shared) ---
@@ -2310,7 +2449,7 @@
                     listContainer.appendChild(item);
                 });
                 listContainer.querySelectorAll('.delete-btn').forEach(btn => {
-                    btn.onclick = async () => { if(confirm("Delete song?")) await deleteDoc(doc(db, 'songs', btn.dataset.id)); };
+                    btn.onclick = async () => { if(confirm("Delete song? This only removes it from the shared library, not from GitHub.")) await deleteDoc(doc(db, 'songs', btn.dataset.id)); };
                 });
             });
             searchInput.addEventListener('input', (e) => {
@@ -2319,18 +2458,6 @@
                     item.style.display = item.textContent.toLowerCase().includes(term) ? 'flex' : 'none';
                 });
             });
-        }
-
-        const toBase64 = file => new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = () => resolve(reader.result.split(',')[1]);
-            reader.onerror = error => reject(error);
-        });
-
-        function escapeHtml(text) {
-            if (!text) return text;
-            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
 
         // --- Freedom Wall Logic (Dynamic Collection) ---
