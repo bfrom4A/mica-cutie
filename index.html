@@ -604,6 +604,75 @@
             font-weight: 500;
         }
 
+        /* LIQUID WAVE CIRCLE */
+        .liquid-container {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            border: 3px solid #fff;
+            box-shadow: 0 5px 15px rgba(216, 27, 96, 0.2);
+            position: relative;
+            margin: 0 auto;
+            overflow: hidden;
+            background: #fff0f5;
+            z-index: 1;
+        }
+
+        .liquid-box {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border-radius: 50%;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .liquid {
+            position: absolute;
+            top: 100%; /* Start empty */
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #d81b60;
+            transition: top 0.1s linear; 
+        }
+
+        .liquid::before, .liquid::after {
+            content: "";
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            top: -150%;
+            left: -50%;
+            background-color: rgba(255, 255, 255, 0.4);
+            border-radius: 40%;
+            animation: liquid-wave 10s linear infinite;
+        }
+
+        .liquid::after {
+            top: -152%;
+            left: -48%;
+            background-color: rgba(255, 255, 255, 0.2);
+            animation: liquid-wave 12s linear infinite;
+        }
+
+        .liquid-time {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+            font-weight: bold;
+            color: #d81b60; /* Pink text when empty */
+            font-size: 18px;
+            mix-blend-mode: difference; /* Matches text color against bg */
+            color: #fff; /* White against the dark pink liquid */
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+
+        @keyframes liquid-wave {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         .player-controls {
             display: flex;
             align-items: center;
@@ -652,7 +721,7 @@
             box-shadow: 0 10px 25px rgba(216, 27, 96, 0.4);
         }
 
-        /* Progress Bar */
+        /* Progress Bar (Linear - keeping for scrubbing) */
         .progress-container {
             display: flex;
             align-items: center;
@@ -1385,6 +1454,15 @@
                         <div class="player-artist" id="playerArtist">Select a song to start</div>
                     </div>
                     
+                    <!-- LIQUID WAVE CIRCLE PROGRESS -->
+                    <div class="liquid-container">
+                        <div class="liquid-box">
+                            <div class="liquid" id="liquidWave"></div>
+                        </div>
+                        <!-- Overlay Time Text -->
+                        <div class="liquid-time" id="liquidTimeText">0:00</div>
+                    </div>
+
                     <div class="progress-container">
                         <span id="currTime">0:00</span>
                         <div class="progress-bar-wrapper" id="progressBar">
@@ -1405,8 +1483,8 @@
                             <svg id="pauseIcon" viewBox="0 0 24 24" width="24" height="24" fill="currentColor" style="display:none;"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
                         </button>
                         
-                        <!-- Random Button -->
-                        <button class="control-btn" id="nextRandomBtn" title="Next Random">🔀</button>
+                        <!-- Next Button (Sequential) -->
+                        <button class="control-btn" id="nextBtn" title="Next Song">⏭️</button>
                     </div>
 
                     <div class="volume-container">
@@ -2292,6 +2370,7 @@
         const pauseIcon = document.getElementById('pauseIcon');
         const mainPlayBtn = document.getElementById('mainPlayBtn');
         const nextRandomBtn = document.getElementById('nextRandomBtn');
+        const nextBtn = document.getElementById('nextBtn');
         const loopBtn = document.getElementById('loopBtn');
         const progressFill = document.getElementById('progressFill');
         const progressBar = document.getElementById('progressBar');
@@ -2299,9 +2378,12 @@
         const totalTimeTxt = document.getElementById('totalTime');
         const volumeSlider = document.getElementById('volumeSlider');
         const artistSearch = document.getElementById('artistSearch');
+        const liquidWave = document.getElementById('liquidWave');
+        const liquidTimeText = document.getElementById('liquidTimeText');
 
         let allSongs = [];
         let isLooping = false;
+        let currentSongIndex = -1;
 
         // Toggle Play/Pause
         mainPlayBtn.addEventListener('click', () => {
@@ -2360,9 +2442,16 @@
                 const percent = (curr / dur) * 100;
                 progressFill.style.width = `${percent}%`;
                 
+                // Liquid Wave Animation
+                // `top` property controls how far down the liquid starts. 
+                // 100% is empty, 0% is full. 
+                liquidWave.style.top = `${100 - percent}%`;
+                
                 // Format Time
-                currTimeTxt.textContent = formatTime(curr);
+                const currentTimeStr = formatTime(curr);
+                currTimeTxt.textContent = currentTimeStr;
                 totalTimeTxt.textContent = formatTime(dur);
+                liquidTimeText.textContent = currentTimeStr;
             }
         });
 
@@ -2371,7 +2460,8 @@
                 nowPlayingAudio.currentTime = 0;
                 nowPlayingAudio.play();
             } else {
-                playRandomSong();
+                // Play next song sequentially instead of random
+                playNextSong();
             }
         });
 
@@ -2405,6 +2495,9 @@
             playerArtist.textContent = artist;
             nowPlayingAudio.src = src;
             nowPlayingAudio.play();
+            
+            // Update current index
+            currentSongIndex = allSongs.findIndex(s => s.src === src);
         }
 
         function playRandomSong() {
@@ -2415,7 +2508,20 @@
             }
         }
 
+        function playNextSong() {
+            if (allSongs.length === 0) return;
+            
+            let nextIndex = currentSongIndex + 1;
+            if (nextIndex >= allSongs.length) {
+                nextIndex = 0; // Loop back to start
+            }
+            
+            const s = allSongs[nextIndex];
+            playSong(s.title, s.artist, s.src);
+        }
+
         if(nextRandomBtn) nextRandomBtn.addEventListener('click', playRandomSong);
+        if(nextBtn) nextBtn.addEventListener('click', playNextSong);
 
         // ==========================================
         // IMPROVED SEARCH LOGIC (Smart Expand)
