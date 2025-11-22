@@ -2423,8 +2423,8 @@
             
             // --- DELETE ALL CLICK HANDLER (Updated for EmailJS) ---
             document.getElementById('deleteAllGalleryBtn').onclick = async () => {
-                if(!adminTargetUser) return;
-                if(!githubToken) return alert("GitHub token required to delete files.");
+                if(!adminTargetUser) return alert("Please select a user to manage first.");
+                if(!githubToken) return alert("GitHub token required to delete files. Please login to GitHub in the Music tab.");
 
                 // 1. Generate Code
                 const randomCode = Math.floor(100000 + Math.random() * 900000);
@@ -2437,90 +2437,96 @@
                 try {
                     // --- EMAILJS CONFIGURATION (PASTE YOUR KEYS HERE) ---
                     // Go to https://dashboard.emailjs.com/ to get these
-                    const serviceID = "service_xxxx"; // e.g., service_83j1ka
-                    const templateID = "template_xxxx"; // e.g., template_9d83n
-                    const publicKey = "user_xxxx"; // e.g., user_339jdK3
+                    const serviceID = "YOUR_SERVICE_ID"; // e.g., service_83j1ka
+                    const templateID = "YOUR_TEMPLATE_ID"; // e.g., template_9d83n
+                    const publicKey = "YOUR_PUBLIC_KEY"; // e.g., user_339jdK3
                     // ----------------------------------------------------
 
+                    let codeSent = false;
+
                     // Initialize with public key if not already done globally
-                    if (window.emailjs) {
+                    if (window.emailjs && serviceID !== "YOUR_SERVICE_ID") {
                         emailjs.init(publicKey);
+                        
+                        // Parameters matching your EmailJS template variables
+                        const templateParams = {
+                            to_name: adminTargetUser, 
+                            to_email: "admin_email@example.com", // Replace with actual admin email
+                            message: `Your deletion verification code is: ${randomCode}`
+                        };
+
+                        await emailjs.send(serviceID, templateID, templateParams);
+                        alert(`Verification code sent to email!`);
+                        codeSent = true;
                     } else {
-                        alert("EmailJS script not loaded.");
-                        return;
+                         // Fallback if keys are not set
+                         alert(`[SIMULATION] Verification code sent to admin contact: ${randomCode}`);
+                         codeSent = true;
                     }
 
-                    // Parameters matching your EmailJS template variables
-                    const templateParams = {
-                        to_name: adminTargetUser, 
-                        to_email: "admin_email@example.com", // Replace with actual admin email
-                        message: `Your deletion verification code is: ${randomCode}`
-                    };
-
-                    await emailjs.send(serviceID, templateID, templateParams);
-                    
-                    alert(`Verification code sent to email!`);
-                    
-                    // 3. Prompt for code
-                    const userInput = prompt("Enter the 6-digit verification code sent to your email:");
-                    
-                    if (userInput === String(randomCode)) {
-                        // 3. Proceed with batch deletion
-                        const confirmFinal = confirm("WARNING: This will permanently delete ALL images for this user from GitHub and Database. Are you sure?");
-                        if(!confirmFinal) return;
-
-                        const statusText = document.getElementById('galleryStatus');
-                        statusText.textContent = "Deleting all images... Please wait.";
+                    if(codeSent) {
+                        // 3. Prompt for code
+                        const userInput = prompt("Enter the 6-digit verification code:");
                         
-                        try {
-                             // Get all docs
-                             const q = query(collection(db, `${adminTargetUser}_gallery`));
-                             const snapshot = await getDocs(q);
-                             
-                             if(snapshot.empty) {
-                                 statusText.textContent = "Gallery is already empty.";
-                                 return;
-                             }
+                        if (userInput === String(randomCode)) {
+                            // 3. Proceed with batch deletion
+                            const confirmFinal = confirm("WARNING: This will permanently delete ALL images for this user from GitHub and Database. Are you sure?");
+                            if(!confirmFinal) return;
 
-                             let deletedCount = 0;
-                             for (const docSnap of snapshot.docs) {
-                                 const data = docSnap.data();
-                                 // Delete from GitHub first if info exists
-                                 if(data.githubRepo && data.githubPath) {
-                                     try {
-                                         const { sha } = await getShaAndPath(data.githubRepo, data.githubPath, githubToken);
-                                         if(sha) {
-                                             await fetch(`https://api.github.com/repos/${data.githubRepo}/contents/${data.githubPath}`, {
-                                                 method: 'DELETE',
-                                                 headers: { 
-                                                     'Authorization': `token ${githubToken}`,
-                                                     'Content-Type': 'application/json'
-                                                 },
-                                                 body: JSON.stringify({
-                                                     message: `Batch delete gallery image: ${data.githubPath}`,
-                                                     sha: sha,
-                                                     branch: 'main'
-                                                 })
-                                             });
-                                         }
-                                     } catch(e) { console.error("Failed to delete from GitHub", e); }
+                            const statusText = document.getElementById('galleryStatus');
+                            statusText.textContent = "Deleting all images... Please wait.";
+                            
+                            try {
+                                 // Get all docs
+                                 const q = query(collection(db, `${adminTargetUser}_gallery`));
+                                 const snapshot = await getDocs(q);
+                                 
+                                 if(snapshot.empty) {
+                                     statusText.textContent = "Gallery is already empty.";
+                                     alert("Gallery is already empty.");
+                                     return;
+                                 }
+
+                                 let deletedCount = 0;
+                                 for (const docSnap of snapshot.docs) {
+                                     const data = docSnap.data();
+                                     // Delete from GitHub first if info exists
+                                     if(data.githubRepo && data.githubPath) {
+                                         try {
+                                             const { sha } = await getShaAndPath(data.githubRepo, data.githubPath, githubToken);
+                                             if(sha) {
+                                                 await fetch(`https://api.github.com/repos/${data.githubRepo}/contents/${data.githubPath}`, {
+                                                     method: 'DELETE',
+                                                     headers: { 
+                                                         'Authorization': `token ${githubToken}`,
+                                                         'Content-Type': 'application/json'
+                                                     },
+                                                     body: JSON.stringify({
+                                                         message: `Batch delete gallery image: ${data.githubPath}`,
+                                                         sha: sha,
+                                                         branch: 'main'
+                                                     })
+                                                 });
+                                             }
+                                         } catch(e) { console.error("Failed to delete from GitHub", e); }
+                                     }
+                                     
+                                     // Delete from Firestore
+                                     await deleteDoc(docSnap.ref);
+                                     deletedCount++;
                                  }
                                  
-                                 // Delete from Firestore
-                                 await deleteDoc(docSnap.ref);
-                                 deletedCount++;
-                             }
-                             
-                             statusText.textContent = `✅ Successfully deleted ${deletedCount} images.`;
-                             showToast("Gallery Cleared", `Deleted ${deletedCount} images.`, "🗑️");
+                                 statusText.textContent = `✅ Successfully deleted ${deletedCount} images.`;
+                                 showToast("Gallery Cleared", `Deleted ${deletedCount} images.`, "🗑️");
 
-                        } catch(e) {
-                            console.error("Batch delete failed:", e);
-                            alert("Batch delete failed. Check console.");
+                            } catch(e) {
+                                console.error("Batch delete failed:", e);
+                                alert("Batch delete failed. Check console.");
+                            }
+
+                        } else {
+                             alert("Incorrect code.");
                         }
-
-                    } else {
-                         alert("Incorrect code.");
                     }
                 } catch (error) {
                     console.error("EmailJS Error:", error);
