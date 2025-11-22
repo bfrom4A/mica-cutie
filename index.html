@@ -2295,7 +2295,7 @@
         }
         
         // --- GITHUB AUTH & REPO FETCH LOGIC (Shared) ---
-            
+        // Moved OUTSIDE setupAdminConsole to be accessible globally
         async function fetchRepositories(type) {
             if (!githubToken) return;
             const repoSelect = document.getElementById(`ghRepoSelect${type === 'music' ? 'Music' : 'Gallery'}`);
@@ -2323,7 +2323,6 @@
                 repoSelect.innerHTML = '<option value="">Failed to load repos</option>';
             }
         }
-
 
         function setupAdminConsole() {
             const openBtn = document.getElementById('openAdminBtn');
@@ -2627,6 +2626,23 @@
                 } catch (e) { alert("Error"); }
             };
             
+
+            document.getElementById('ghLoginBtn').onclick = async () => {
+                const provider = new GithubAuthProvider();
+                provider.addScope('repo'); // Request 'repo' scope for write access
+                try {
+                    const result = await signInWithPopup(auth, provider);
+                    const credential = GithubAuthProvider.credentialFromResult(result);
+                    githubToken = credential.accessToken;
+                    updateGitHubUI(true); // Show both music and gallery UI
+                } catch (e) { 
+                    console.error("GitHub Login Failed:", e);
+                    // Show specific error to user
+                    alert(`Login Failed: ${e.message} (Code: ${e.code})`);
+                    updateGitHubUI(false);
+                }
+            };
+            
             // --- GALLERY UPLOAD LOGIC (GitHub) ---
 
             document.getElementById('addImgBtn').onclick = async () => {
@@ -2801,7 +2817,7 @@
 
             setupAdminSongList(); // Shared Music Management
             
-            // GitHub Music Logic (unchanged from previous step)
+            // GitHub Music Logic (RESTORED FULL LOGIC HERE)
             const uploadBtnMusic = document.getElementById('startUploadBtn');
             const scanMusicBtn = document.getElementById('scanMusicBtn'); 
             
@@ -2988,6 +3004,7 @@
 
         // --- New Function: Manage Admin Song List (Shared) ---
         function setupAdminSongList() {
+            // ... (Rest of the logic remains exactly the same as before)
             const listContainer = document.getElementById('adminSongList');
             const searchInput = document.getElementById('adminSongSearch');
             onSnapshot(collection(db, 'songs'), (snapshot) => {
@@ -3011,6 +3028,8 @@
             });
         }
 
+        // --- Freedom Wall Logic ---
+        // ... (Freedom Wall logic same as before) ...
         // --- Freedom Wall Logic (Dynamic Collection) ---
         function setupFreedomWall(user) {
             const collectionName = `${user}_messages`;
