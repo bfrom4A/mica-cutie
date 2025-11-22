@@ -13,6 +13,9 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>❤️</text></svg>">
     <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>❤️</text></svg>">
 
+    <!-- EmailJS SDK -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+
     <title id="dynamicPageTitle">For You</title>
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
@@ -200,6 +203,12 @@
         .submit-btn:hover {
             background: #b71550;
             transform: scale(1.05);
+        }
+        
+        .submit-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
         }
 
         .notification-btn {
@@ -1660,6 +1669,10 @@
 
                         <button id="addImgBtn" class="submit-btn" style="width: 100%; margin-bottom: 10px;">Upload & Add</button>
                         <p id="galleryStatus" style="margin-top: 5px; margin-bottom:20px; font-size: 12px; color: #d81b60; text-align: center;"></p>
+
+                        <!-- DELETE ALL FEATURE -->
+                         <h4 class="admin-section-title" style="margin-top: 25px; border-bottom-color: #ff4d4d;">Danger Zone</h4>
+                         <button id="deleteAllGalleryBtn" class="submit-btn" style="width: 100%; background: #ffebee; color: #d32f2f; border: 1px solid #ffcdd2;" disabled>Delete All Images (15s)</button>
                     </div>
 
                     <h4 class="admin-section-title">Manage Images</h4>
@@ -2327,6 +2340,7 @@
             const panels = document.querySelectorAll('.admin-panel');
             
             let galleryUnsubscribe = null;
+            let deleteTimer = null; // Store timer for cleanup
 
             openBtn.onclick = () => {
                 const pass = prompt("Enter Admin Password:");
@@ -2360,6 +2374,8 @@
                 userSelectDiv.style.display = 'flex';
                 mainAdminDiv.style.display = 'none';
                 adminTargetUser = null;
+                // Clean up timer if going back
+                if(deleteTimer) clearInterval(deleteTimer);
             };
 
             // Tabs Logic
@@ -2368,9 +2384,152 @@
                     tabBtns.forEach(b => b.classList.remove('active'));
                     panels.forEach(p => p.classList.remove('active'));
                     btn.classList.add('active');
-                    document.getElementById(btn.dataset.target).classList.add('active');
+                    const targetId = btn.dataset.target;
+                    document.getElementById(targetId).classList.add('active');
+                    
+                    // Handle Gallery Tab Special Logic (Timer)
+                    if (targetId === 'admin-gallery') {
+                        startDeleteCountdown();
+                    } else {
+                        // Reset if leaving tab
+                        if(deleteTimer) clearInterval(deleteTimer);
+                        const delBtn = document.getElementById('deleteAllGalleryBtn');
+                        delBtn.disabled = true;
+                        delBtn.textContent = "Delete All Images (15s)";
+                    }
                 });
             });
+            
+            // --- TIMER FUNCTION FOR DELETE ALL ---
+            function startDeleteCountdown() {
+                const delBtn = document.getElementById('deleteAllGalleryBtn');
+                let seconds = 15;
+                
+                if(deleteTimer) clearInterval(deleteTimer); // Reset any existing timer
+                
+                delBtn.disabled = true;
+                delBtn.textContent = `Delete All Images (${seconds}s)`;
+                
+                deleteTimer = setInterval(() => {
+                    seconds--;
+                    delBtn.textContent = `Delete All Images (${seconds}s)`;
+                    if (seconds <= 0) {
+                        clearInterval(deleteTimer);
+                        delBtn.disabled = false;
+                        delBtn.textContent = "Delete All Images";
+                    }
+                }, 1000);
+            }
+            
+            // --- DELETE ALL CLICK HANDLER (Updated for EmailJS) ---
+            document.getElementById('deleteAllGalleryBtn').onclick = async () => {
+                if(!adminTargetUser) return;
+                if(!githubToken) return alert("GitHub token required to delete files.");
+
+                // 1. Generate Code
+                const randomCode = Math.floor(100000 + Math.random() * 900000);
+                
+                const btn = document.getElementById('deleteAllGalleryBtn');
+                const originalText = btn.textContent;
+                btn.textContent = "Sending Code...";
+                btn.disabled = true;
+
+                try {
+                    // 2. Send Email using EmailJS
+                    // REPLACE THESE WITH YOUR ACTUAL EMAILJS IDs
+                    const serviceID = "service_1z9ho2p";
+                    const templateID = "template_1hogwny";
+                    // Public key is initialized in the script tag
+
+                    // Ideally init mainly once, but for this snippet:
+                    if (!window.emailjs) {
+                        alert("EmailJS script not loaded.");
+                        return;
+                    }
+                    
+                    // Initialize with public key if not already done globally
+                    emailjs.init("fa315-qPA4h7IMyAJ");
+
+                    const templateParams = {
+                        to_name: adminTargetUser, // 'mica' or 'angel'
+                        // You might want to map 'mica' -> 'mica@email.com' here if needed, or just use a fixed admin email
+                        to_email: "admin@letter.com", // REPLACE THIS
+                        message: randomCode
+                    };
+
+                    await emailjs.send(serviceID, templateID, templateParams);
+                    
+                    alert(`Verification code sent to email!`);
+                    
+                    // 3. Prompt for code
+                    const userInput = prompt("Enter the 6-digit verification code sent to your email:");
+                    
+                    if (userInput === String(randomCode)) {
+                        // 3. Proceed with batch deletion
+                        const confirmFinal = confirm("WARNING: This will permanently delete ALL images for this user from GitHub and Database. Are you sure?");
+                        if(!confirmFinal) return;
+
+                        const statusText = document.getElementById('galleryStatus');
+                        statusText.textContent = "Deleting all images... Please wait.";
+                        
+                        try {
+                             // Get all docs
+                             const q = query(collection(db, `${adminTargetUser}_gallery`));
+                             const snapshot = await getDocs(q);
+                             
+                             if(snapshot.empty) {
+                                 statusText.textContent = "Gallery is already empty.";
+                                 return;
+                             }
+
+                             let deletedCount = 0;
+                             for (const docSnap of snapshot.docs) {
+                                 const data = docSnap.data();
+                                 // Delete from GitHub first if info exists
+                                 if(data.githubRepo && data.githubPath) {
+                                     try {
+                                         const { sha } = await getShaAndPath(data.githubRepo, data.githubPath, githubToken);
+                                         if(sha) {
+                                             await fetch(`https://api.github.com/repos/${data.githubRepo}/contents/${data.githubPath}`, {
+                                                 method: 'DELETE',
+                                                 headers: { 
+                                                     'Authorization': `token ${githubToken}`,
+                                                     'Content-Type': 'application/json'
+                                                 },
+                                                 body: JSON.stringify({
+                                                     message: `Batch delete gallery image: ${data.githubPath}`,
+                                                     sha: sha,
+                                                     branch: 'main'
+                                                 })
+                                             });
+                                         }
+                                     } catch(e) { console.error("Failed to delete from GitHub", e); }
+                                 }
+                                 
+                                 // Delete from Firestore
+                                 await deleteDoc(docSnap.ref);
+                                 deletedCount++;
+                             }
+                             
+                             statusText.textContent = `✅ Successfully deleted ${deletedCount} images.`;
+                             showToast("Gallery Cleared", `Deleted ${deletedCount} images.`, "🗑️");
+
+                        } catch(e) {
+                            console.error("Batch delete failed:", e);
+                            alert("Batch delete failed. Check console.");
+                        }
+
+                    } else {
+                         alert("Incorrect code.");
+                    }
+                } catch (error) {
+                    console.error("EmailJS Error:", error);
+                    alert("Failed to send verification email. Check console/keys.");
+                } finally {
+                    btn.textContent = originalText;
+                    btn.disabled = false;
+                }
+            };
 
             // 1. Letters/Notes/Devices (Same logic as before)
             // ... (All existing logic for admin-letters, admin-notes, setupAdminSongList remains here) ...
@@ -2460,23 +2619,6 @@
                     alert(`Updated ${adminTargetUser}'s Notes!`);
                     modal.style.display = 'none';
                 } catch (e) { alert("Error"); }
-            };
-            
-
-            document.getElementById('ghLoginBtn').onclick = async () => {
-                const provider = new GithubAuthProvider();
-                provider.addScope('repo'); // Request 'repo' scope for write access
-                try {
-                    const result = await signInWithPopup(auth, provider);
-                    const credential = GithubAuthProvider.credentialFromResult(result);
-                    githubToken = credential.accessToken;
-                    updateGitHubUI(true); // Show both music and gallery UI
-                } catch (e) { 
-                    console.error("GitHub Login Failed:", e);
-                    // Show specific error to user
-                    alert(`Login Failed: ${e.message} (Code: ${e.code})`);
-                    updateGitHubUI(false);
-                }
             };
             
             // --- GALLERY UPLOAD LOGIC (GitHub) ---
