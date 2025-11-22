@@ -2627,6 +2627,23 @@
                 } catch (e) { alert("Error"); }
             };
             
+
+            document.getElementById('ghLoginBtn').onclick = async () => {
+                const provider = new GithubAuthProvider();
+                provider.addScope('repo'); // Request 'repo' scope for write access
+                try {
+                    const result = await signInWithPopup(auth, provider);
+                    const credential = GithubAuthProvider.credentialFromResult(result);
+                    githubToken = credential.accessToken;
+                    updateGitHubUI(true); // Show both music and gallery UI
+                } catch (e) { 
+                    console.error("GitHub Login Failed:", e);
+                    // Show specific error to user
+                    alert(`Login Failed: ${e.message} (Code: ${e.code})`);
+                    updateGitHubUI(false);
+                }
+            };
+            
             // --- GALLERY UPLOAD LOGIC (GitHub) ---
 
             document.getElementById('addImgBtn').onclick = async () => {
@@ -3109,8 +3126,7 @@
     let audioContext; // Declare globally for reuse
     
     document.addEventListener('DOMContentLoaded', function() {
-        // ... (Same Security & UI Logic as previous file, no changes needed here) ...
-        // Ensuring session persistence checks for loggedInUser key
+        // --- UI Setup ---
         const passwordModal = document.getElementById('passwordModal');
         const welcomeScreen = document.getElementById('welcomeScreen');
         const mainContent = document.getElementById('mainContent');
