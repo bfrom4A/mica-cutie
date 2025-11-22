@@ -828,7 +828,7 @@
 
         .liquid {
             position: absolute;
-            top: 100%; 
+            top: 100%; /* Start empty */
             left: 0;
             width: 100%;
             height: 100%;
@@ -2398,8 +2398,9 @@
                     githubToken = credential.accessToken;
                     updateGitHubUI(true); // Show both music and gallery UI
                 } catch (e) { 
-                    alert("GitHub Login Failed. Ensure pop-ups are allowed and try again.");
                     console.error("GitHub Login Failed:", e);
+                    // Show specific error to user
+                    alert(`Login Failed: ${e.message} (Code: ${e.code})`);
                     updateGitHubUI(false);
                 }
             };
