@@ -2435,26 +2435,26 @@
                 btn.disabled = true;
 
                 try {
-                    // 2. Send Email using EmailJS
-                    // REPLACE THESE WITH YOUR ACTUAL EMAILJS IDs
-                    const serviceID = "service_1z9ho2p";
-                    const templateID = "template_1hogwny";
-                    // Public key is initialized in the script tag
+                    // --- EMAILJS CONFIGURATION (PASTE YOUR KEYS HERE) ---
+                    // Go to https://dashboard.emailjs.com/ to get these
+                    const serviceID = "service_xxxx"; // e.g., service_83j1ka
+                    const templateID = "template_xxxx"; // e.g., template_9d83n
+                    const publicKey = "user_xxxx"; // e.g., user_339jdK3
+                    // ----------------------------------------------------
 
-                    // Ideally init mainly once, but for this snippet:
-                    if (!window.emailjs) {
+                    // Initialize with public key if not already done globally
+                    if (window.emailjs) {
+                        emailjs.init(publicKey);
+                    } else {
                         alert("EmailJS script not loaded.");
                         return;
                     }
-                    
-                    // Initialize with public key if not already done globally
-                    emailjs.init("fa315-qPA4h7IMyAJ");
 
+                    // Parameters matching your EmailJS template variables
                     const templateParams = {
-                        to_name: adminTargetUser, // 'mica' or 'angel'
-                        // You might want to map 'mica' -> 'mica@email.com' here if needed, or just use a fixed admin email
-                        to_email: "admin@letter.com", // REPLACE THIS
-                        message: randomCode
+                        to_name: adminTargetUser, 
+                        to_email: "admin_email@example.com", // Replace with actual admin email
+                        message: `Your deletion verification code is: ${randomCode}`
                     };
 
                     await emailjs.send(serviceID, templateID, templateParams);
